@@ -12,6 +12,12 @@ A simple example:
     Content Cell  | Content Cell
 
 Copyright 2009 - [Waylan Limberg](http://achinghead.com)
+
+
+|------------- | ------------- |
+|Content Cell  | Content Cell  |
+|Content Cell                 ||
+
 """
 
 from __future__ import absolute_import
@@ -20,44 +26,125 @@ from . import Extension
 from ..blockprocessors import BlockProcessor
 from ..util import etree
 
+import re
+
 class TableProcessor(BlockProcessor):
-    """ Process Tables. """
 
     def test(self, parent, block):
+        p = re.compile('^[\W\-\:]+$')
         rows = block.split('\n')
         return (len(rows) > 2 and '|' in rows[0] and 
-                '|' in rows[1] and '-' in rows[1] and 
-                rows[1].strip()[0] in ['|', ':', '-'])
-
+                '|' in rows[1] and (
+                    p.match(rows[0]) or p.match(rows[1]))
+                    )
+        
     def run(self, parent, blocks):
         """ Parse a table block and build table. """
         block = blocks.pop(0).split('\n')
-        header = block[0].strip()
-        seperator = block[1].strip()
-        rows = block[2:]
+        
+        p = re.compile('^[\W\-\:\|]+$')
+
+        #pattern to indicate rowspan -- at least 3 dashes
+        r = re.compile('^\W*\-{3,}\W*$')
+        
+        hasheaderRow = 0
+        if p.match(block[1]):
+             hasheaderRow = 1
+             blockstart = 2
+             seperator  = block[1].strip()
+             header = block[0].strip()
+
+        else:
+            blockstart = 1
+            seperator  = block[0].strip()
+        
+        print('Has header row:' + 'Yes' if hasheaderRow else'No')
+
+        rows = block[blockstart:]
+
         # Get format type (bordered by pipes or not)
         border = False
-        if header.startswith('|'):
+        if seperator.startswith('|'):
             border = True
         # Get alignment of columns
         align = []
         for c in self._split_row(seperator, border):
-            if c.startswith(':') and c.endswith(':'):
-                align.append('center')
-            elif c.startswith(':'):
-                align.append('left')
-            elif c.endswith(':'):
-                align.append('right')
-            else:
-                align.append(None)
+            align.append(self._get_alignment(c))
+        
         # Build table
         table = etree.SubElement(parent, 'table')
-        thead = etree.SubElement(table, 'thead')
-        self._build_row(header, thead, align, border)
-        tbody = etree.SubElement(table, 'tbody')
-        for row in rows:
-            self._build_row(row.strip(), tbody, align, border)
+        if hasheaderRow:
+            thead = etree.SubElement(table, 'thead')
+            cells = self._split_row(header, border)
+            self._build_row(header, thead, align, border)
 
+        tabledata = {}
+        rownum = 0
+
+        for row in rows:
+            colnum = 0
+            cells = self._split_row(row, border)
+            tabledata[rownum] = {}
+            for cell in cells:
+                cellalign = self._get_alignment(cell)
+                cell = cell.strip(":")
+                cell = cell.strip()
+                
+                colspan = 1
+                rowspan = 1
+                display = True
+                #completely blank cell indicates colspan
+                if cell == "":
+                    if colnum > 0:
+                         tabledata[rownum][colnum -1]['colspan'] += 1
+                         display = False
+                    else:
+                        cell = "&nbsp;"
+
+                #Cell with just hyphens indicates rowspan
+                if r.match(cell):
+                    if rownum > 0:
+                         tabledata[rownum -1][colnum]['rowspan'] += 1
+                         display = False
+                    else:
+                        cell = "&nbsp;"
+
+                if not cellalign:
+                    cellalign = align[colnum]
+
+                tabledata[rownum][colnum] = {'text' : cell,'align':cellalign,'display' : display,'colspan' : colspan,'rowspan' : rowspan}
+
+                colnum +=1
+            
+            rownum += 1
+        
+        tbody = etree.SubElement(table, 'tbody')
+        
+        for row in tabledata:
+            tr = etree.SubElement(tbody, 'tr')
+            for col in tabledata[row]:
+                 cell = tabledata[row][col]
+                 if cell['display']:
+                    c = etree.SubElement(tr, 'td')
+                    c.text = cell['text']
+                    if cell['align']:
+                        c.set('align',cell['align'])
+                    if cell['rowspan'] > 1:
+                        c.set('rowspan',str(cell['rowspan']))
+                    if cell['colspan'] > 1:
+                        c.set('colspan',str(cell['colspan']))
+    
+    def _get_alignment(self,cell):
+        """ Get the alignment of a cell from the colon format """
+        align = None
+        if cell.startswith(':') and cell.endswith(':'):
+            align ='center'
+        elif cell.startswith(':'):
+            align ='left'
+        elif cell.endswith(':'):
+            align ='right'
+        return align      
+    
     def _build_row(self, row, parent, align, border):
         """ Given a row of text, build table cells. """
         tr = etree.SubElement(parent, 'tr')
@@ -75,7 +162,7 @@ class TableProcessor(BlockProcessor):
                 c.text = ""
             if a:
                 c.set('align', a)
-
+    
     def _split_row(self, row, border):
         """ split a row of text into list of cells. """
         if border:
@@ -94,7 +181,6 @@ class TableExtension(Extension):
         md.parser.blockprocessors.add('table', 
                                       TableProcessor(md.parser),
                                       '<hashheader')
-
 
 def makeExtension(configs={}):
     return TableExtension(configs=configs)
