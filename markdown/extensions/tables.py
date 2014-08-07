@@ -30,25 +30,24 @@ import re
 
 class TableProcessor(BlockProcessor):
 
+    SEPERATOR = re.compile('^[\W\-\:\|]+$')
+    #pattern to indicate rowspan -- at least 3 dashes
+    ROWSPAN = re.compile('^\W*\-{3,}\W*$')
+
     def test(self, parent, block):
         p = re.compile('^[\W\-\:]+$')
         rows = block.split('\n')
         return (len(rows) > 2 and '|' in rows[0] and 
                 '|' in rows[1] and (
-                    p.match(rows[0]) or p.match(rows[1]))
+                    self.SEPERATOR.match(rows[0]) or self.SEPERATOR.match(rows[1]))
                     )
         
     def run(self, parent, blocks):
         """ Parse a table block and build table. """
         block = blocks.pop(0).split('\n')
         
-        p = re.compile('^[\W\-\:\|]+$')
-
-        #pattern to indicate rowspan -- at least 3 dashes
-        r = re.compile('^\W*\-{3,}\W*$')
-        
         hasheaderRow = 0
-        if p.match(block[1]):
+        if self.SEPERATOR.match(block[1]):
              hasheaderRow = 1
              blockstart = 2
              seperator  = block[1].strip()
@@ -57,9 +56,7 @@ class TableProcessor(BlockProcessor):
         else:
             blockstart = 1
             seperator  = block[0].strip()
-        
-        print('Has header row:' + 'Yes' if hasheaderRow else'No')
-
+                
         rows = block[blockstart:]
 
         # Get format type (bordered by pipes or not)
@@ -102,7 +99,7 @@ class TableProcessor(BlockProcessor):
                         cell = "&nbsp;"
 
                 #Cell with just hyphens indicates rowspan
-                if r.match(cell):
+                if self.ROWSPAN.match(cell):
                     if rownum > 0:
                          tabledata[rownum -1][colnum]['rowspan'] += 1
                          display = False
