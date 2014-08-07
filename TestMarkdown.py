@@ -8,44 +8,15 @@ test = "tables"
 
 if test == "tables":
     text = """
-Tables Extension for Python-Markdown
-====================================
-
-Added parsing of tables to Python-Markdown.
-
-A simple example:
-
-    First Header  | Second Header
-    ------------- | -------------
-    Content Cell  | Content Cell
-    Content Cell  | Content Cell
-
-Copyright 2009 - [Waylan Limberg](http://achinghead.com)
-
-Updated  by Tom Peer
-
-1. Header row is now optional. Just start with separator row
-2. Double dividers with no content are colspans. NB no spaces
-3. Cells with three or more dashes as rows spans
-4. Any cell can have its own alignment
-5. Repeat separator row at bottom for footer (repeats table header)
-
-A complex example 
-
-    First Header  | Second Header | Third header
-    ------------- | ------------- | --------------
-    Row spane     | col span                     || 
-    ---           | Content Cell  |: center      :
-
 First Header  | Second Header | Third header
 ------------- | ------------- | --------------
-Content Cell  | jhasda        | Third col
-Content Cell  ||  second row
-Content Cell  |sdghdf         
-
+Content Cell  | jhasda       :| Third col
+Content Cell  ||  ----
+Content Cell  |:sdghdf   :
+{: #table1 .intro title="My table" caption="This is my table summary"}
 """
     
-    md = markdown.Markdown(['tables'])
+    md = markdown.Markdown(['tables','attr_list'])
     outtext =  md.convert(text)
 
 elif test == "alphameta":
@@ -86,6 +57,22 @@ This is also nonsense.
 [^nonsense]: Nonsense makes no nense"""
 
     md = markdown.Markdown(['footnotes'])
+    outtext = md.convert(text)
+
+elif test == "attr_list":
+
+    text = """# Heading {: #myid .myclass}
+    
+The body. This is paragraph one.
+{: #para1 .intro}
+
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. 
+
+[My link](#myid)
+
+"""
+
+    md = markdown.Markdown(['attr_list'])
     outtext = md.convert(text)
 
 dir = tempfile.gettempdir()

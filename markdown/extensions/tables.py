@@ -156,9 +156,11 @@ class TableProcessor(BlockProcessor):
                         c.set('rowspan',str(cell['rowspan']))
                     if cell['colspan'] > 1:
                         c.set('colspan',str(cell['colspan']))
-        
+        # two things about attr_list
+        # 1. On block elements it looks for the tail of the last child
+        # 2. In this case the pattern has to match a new line at at start and strips this
         if info:
-            table.set('attr_list',info)
+            tbody.tail = "\n\n" + info
 
     def _get_alignment(self,cell):
         """ Get the alignment of a cell from the colon format """
