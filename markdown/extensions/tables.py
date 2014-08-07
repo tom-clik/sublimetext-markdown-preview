@@ -13,10 +13,18 @@ A simple example:
 
 Copyright 2009 - [Waylan Limberg](http://achinghead.com)
 
+Updated  by Tom Peer
 
-|------------- | ------------- |
-|Content Cell  | Content Cell  |
-|Content Cell                 ||
+1. Header row is now optional. Just start with separator row
+2. Double dividers with no content are colspans. NB no spaces. NB Also no ending rows with doubles -- just omit the cells to span the rest
+3. Cells with FOUR or more dashes are row spans
+4. Any cell can have its own alignment
+
+A complex example 
+
+    ------------- | ------------- | --------------
+    Row span      | col span                      
+    ----          | Content Cell  |: center      :|
 
 """
 
@@ -27,17 +35,18 @@ from ..blockprocessors import BlockProcessor
 from ..util import etree
 
 import re
+#import pprint
 
 class TableProcessor(BlockProcessor):
 
     SEPERATOR = re.compile('^[\W\-\:\|]+$')
-    #pattern to indicate rowspan -- at least 3 dashes
-    ROWSPAN = re.compile('^\W*\-{3,}\W*$')
+    #pattern to indicate rowspan -- at least 4 dashes
+    ROWSPAN = re.compile('^\W*\-{4,}\W*$')
 
     def test(self, parent, block):
         p = re.compile('^[\W\-\:]+$')
         rows = block.split('\n')
-        return (len(rows) > 2 and '|' in rows[0] and 
+        return (len(rows) >= 2 and '|' in rows[0] and 
                 '|' in rows[1] and (
                     self.SEPERATOR.match(rows[0]) or self.SEPERATOR.match(rows[1]))
                     )
@@ -67,7 +76,6 @@ class TableProcessor(BlockProcessor):
         align = []
         for c in self._split_row(seperator, border):
             align.append(self._get_alignment(c))
-        
         # Build table
         table = etree.SubElement(parent, 'table')
         if hasheaderRow:
@@ -81,20 +89,23 @@ class TableProcessor(BlockProcessor):
         for row in rows:
             colnum = 0
             cells = self._split_row(row, border)
+            
+            # build struct of structs keyed by rownum and colnum.
             tabledata[rownum] = {}
             for cell in cells:
+                
                 cellalign = self._get_alignment(cell)
                 cell = cell.strip(":")
                 cell = cell.strip()
-                
                 colspan = 1
                 rowspan = 1
-                display = True
+                celldisplay = True
+                
                 #completely blank cell indicates colspan
                 if cell == "":
                     if colnum > 0:
                          tabledata[rownum][colnum -1]['colspan'] += 1
-                         display = False
+                         celldisplay = False
                     else:
                         cell = "&nbsp;"
 
@@ -102,17 +113,24 @@ class TableProcessor(BlockProcessor):
                 if self.ROWSPAN.match(cell):
                     if rownum > 0:
                          tabledata[rownum -1][colnum]['rowspan'] += 1
-                         display = False
+                         celldisplay = False
                     else:
                         cell = "&nbsp;"
 
                 if not cellalign:
-                    cellalign = align[colnum]
+                    if len(align) < colnum:
+                        raise Exception('row ' + row + ' has more columns than header')
+                    cellalign = align[colnum -1]
 
-                tabledata[rownum][colnum] = {'text' : cell,'align':cellalign,'display' : display,'colspan' : colspan,'rowspan' : rowspan}
+                tabledata[rownum][colnum] = {'text' : cell,'align':cellalign,'display' : celldisplay,'colspan' : colspan,'rowspan' : rowspan}
 
                 colnum +=1
             
+            # check we had all cols otherwise add colspan to last cell of row
+            print ('colnum is ' +str(colnum) + ' align is ' + str(len(align)))
+            if len(align) > colnum:
+                tabledata[rownum][colnum-1]['colspan'] += len(align) - colnum
+
             rownum += 1
         
         tbody = etree.SubElement(table, 'tbody')

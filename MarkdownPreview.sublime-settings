@@ -68,7 +68,7 @@
          github     | extension's values are not used.
 
     */
-    "enabled_extensions": ["default","headeranchor"],
+    "enabled_extensions": ["default"],
 
     /*
         Enabled parsers for the parser "select parser" command
