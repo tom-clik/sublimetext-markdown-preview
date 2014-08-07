@@ -42,6 +42,8 @@ class TableProcessor(BlockProcessor):
     SEPERATOR = re.compile('^[\W\-\:\|]+$')
     #pattern to indicate rowspan -- at least 4 dashes
     ROWSPAN = re.compile('^\W*\-{4,}\W*$')
+    #pattern to indicate attr_list
+    ATTR_LIST_RE = re.compile(r'\{\:?([^\}]*)\}')
 
     def test(self, parent, block):
         p = re.compile('^[\W\-\:]+$')
@@ -61,12 +63,18 @@ class TableProcessor(BlockProcessor):
              blockstart = 2
              seperator  = block[1].strip()
              header = block[0].strip()
-
         else:
             blockstart = 1
             seperator  = block[0].strip()
-                
-        rows = block[blockstart:]
+        
+        # check if we have attr_list info at the end
+        blockend = None
+        info = None
+        if self.ATTR_LIST_RE.match(block[-1]):
+            blockend = -1
+            info = block[-1]
+
+        rows = block[blockstart:blockend]
 
         # Get format type (bordered by pipes or not)
         border = False
@@ -148,7 +156,10 @@ class TableProcessor(BlockProcessor):
                         c.set('rowspan',str(cell['rowspan']))
                     if cell['colspan'] > 1:
                         c.set('colspan',str(cell['colspan']))
-    
+        
+        if info:
+            table.set('attr_list',info)
+
     def _get_alignment(self,cell):
         """ Get the alignment of a cell from the colon format """
         align = None
