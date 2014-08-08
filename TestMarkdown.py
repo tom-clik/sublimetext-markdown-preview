@@ -4,7 +4,7 @@ import webbrowser
 import os
 
 # Set the test to one of the options here and run.
-test = "tables"
+test = "admonition"
 
 if test == "tables":
     text = """
@@ -13,7 +13,9 @@ First Header  | Second Header | Third header
 Content Cell  | jhasda       :| Third col
 Content Cell  ||  ----
 Content Cell  |:sdghdf   :
-{: #table1 .intro title="My table" caption="This is my table summary"}
+{: #table1 .intro title="My table" caption="This is my table caption"}
+
+![A charming young lady](http://chivethebrigade.files.wordpress.com/2012/08/girls-920-23.jpg){: .figleft .popup width="200"}
 """
     
     md = markdown.Markdown(['tables','attr_list'])
@@ -35,7 +37,7 @@ The body. This is paragraph one.
 
 elif test == "admonition":
 
-    text = """!!! note"
+    text = """!!! warning "Or custom title"
     
     1. Another line here.
 
@@ -44,6 +46,17 @@ elif test == "admonition":
 What happens here"""
 
     md = markdown.Markdown(['admonition'])
+    outtext = md.convert(text)
+
+elif test == "styles":
+
+    text = """::imageboxleft::
+    ![Alt text](http://images.com/image.jpg)
+    
+    Image caption
+"""
+
+    md = markdown.Markdown(['styles'])
     outtext = md.convert(text)
 
 elif test == "footnotes":
