@@ -1,20 +1,12 @@
 """
 ========================= FOOTNOTES =================================
 
-This section adds footnote handling to markdown.  It can be used as
-an example for extending python-markdown with relatively complex
-functionality.  While in this case the extension is included inside
-the module itself, it could just as easily be added from outside the
-module.  Not that all markdown classes above are ignorant about
-footnotes.  All footnote functionality is provided separately and
-then added to the markdown instance at the run time.
+This section adds footnote handling to markdown.  It can be used as an example for extending python-markdown with relatively complex functionality.  While in this case the extension is included inside the module itself, it could just as easily be added from outside the module.  Not that all markdown classes above are ignorant about footnotes.  All footnote functionality is provided separately and then added to the markdown instance at the run time.
 
-Footnote functionality is attached by calling extendMarkdown()
-method of FootnoteExtension.  The method also registers the
-extension to allow it's state to be reset by a call to reset()
-method.
+Footnote functionality is attached by calling extendMarkdown() method of FootnoteExtension.  The method also registers the extension to allow it's state to be reset by a call to reset() method.
 
 Example:
+
     Footnotes[^1] have a label[^label] and a definition[^!DEF].
 
     [^1]: This is a footnote
