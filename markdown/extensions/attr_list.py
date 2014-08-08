@@ -24,6 +24,7 @@ from . import Extension
 from ..treeprocessors import Treeprocessor
 from ..util import isBlockLevel
 import re
+from ..util import etree
 
 try:
     Scanner = re.Scanner
@@ -118,6 +119,7 @@ class AttrListTreeprocessor(Treeprocessor):
                         if isheader(elem):
                             # clean up trailing #s
                             elem[-1].tail = elem[-1].tail.rstrip('#').rstrip()
+                        
                 elif elem.text:
                     # no children. Get from text.
                     m = RE.search(elem.text)
@@ -129,6 +131,12 @@ class AttrListTreeprocessor(Treeprocessor):
                         if isheader(elem):
                             # clean up trailing #s
                             elem.text = elem.text.rstrip('#').rstrip()
+                if 'caption' in elem.attrib:
+                    # insert caption tag
+                    caption = etree.SubElement(elem, 'caption')
+                    caption.text = elem.attrib['caption']
+                    caption.tail = "\n"
+                    elem.attrib.pop('caption',None)
             else:
                 # inline: check for attrs at start of tail
                 if elem.tail:
@@ -136,6 +144,7 @@ class AttrListTreeprocessor(Treeprocessor):
                     if m:
                         self.assign_attrs(elem, m.group(1))
                         elem.tail = elem.tail[m.end():]
+
 
     def assign_attrs(self, elem, attrs):
         """ Assign attrs to element. """
