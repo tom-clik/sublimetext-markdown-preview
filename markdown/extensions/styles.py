@@ -14,23 +14,26 @@ A simple example:
 
 A generic Styles style
 
-    ::warning:: Danger
+    :warning:: 
+        ## Danger
+
         Be careful when doing this
 
 A floating image
 
     ::imageboxleft::
-            [Alt text](http://images.com/image.jpg)
             
-            caption:
+            ![Alt text](http://images.com/image.jpg)
+            
+            ::caption::
                 Image caption
 
 Outputs:
     <p class="intro">The introduction paragraph here</p>
 
-    <div class="warning"><p class="warning-title">Danger</p><p>Be careful when doing this</p></div>
+    <div class="warning"><h2>Danger</h2><p>Be careful when doing this</p></div>
 
-     <div class="imageboxleft"><image src="http://images.com/image.jpg" /><p class="caption">Image caption</p></div>
+     <div class="imageboxleft"><image src="http://images.com/image.jpg" /><div class="caption">Image caption</div></div>
 
 """
 
@@ -55,12 +58,19 @@ class StylesExtension(Extension):
 
 class StylesProcessor(BlockProcessor):
 
-    RE = re.compile(r'(?:^|\n)\:{1,2}([\w\-]+):{1,2}\s+(.*?)$')
+    #RE = re.compile(r'(?:^|\n)\:{1,2}([\w\-]+):{1,2}\s+(.*?)$')
+    RE = re.compile(r'(?:^|\n)\:{1,2}([\w\-]+)\:{1,2}')
 
     def test(self, parent, block):
         sibling = self.lastChild(parent)
-        return self.RE.search(block) or \
-            (block.startswith(' ' * self.tab_length) and sibling)
+        if self.RE.search(block) or \
+            (block.startswith(' ' * self.tab_length) and sibling):
+            print('Ok')
+            return True
+        else:
+            print('didnt match')
+            return False
+         
 
     def run(self, parent, blocks):
         sibling = self.lastChild(parent)
@@ -73,13 +83,10 @@ class StylesProcessor(BlockProcessor):
         block, theRest = self.detab(block)
 
         if m:
-            klass, title = self.get_class_and_title(m)
+            klass = m.group(1).lower()
             div = etree.SubElement(parent, 'div')
-            div.set('class', '%s %s' % (self.CLASSNAME, klass))
-            if title:
-                p = etree.SubElement(div, 'p')
-                p.text = title
-                p.set('class', self.CLASSNAME_TITLE)
+            div.set('class', klass)
+            
         else:
             div = sibling
 
@@ -92,7 +99,7 @@ class StylesProcessor(BlockProcessor):
             blocks.insert(0, theRest)
 
     def get_class_and_title(self, match):
-        klass, title = match.group(1).lower(), match.group(2)
+        klass = match.group(1).lower()
         if title is None:
             # no title was provided, use the capitalized classname as title
             # e.g.: `!!! note` will render `<p class="Styles-title">Note</p>`
