@@ -1,5 +1,5 @@
 """
-========================= FOOTNOTES =================================
+# FOOTNOTES 
 
 This section adds footnote handling to markdown.  It can be used as an example for extending python-markdown with relatively complex functionality.  While in this case the extension is included inside the module itself, it could just as easily be added from outside the module.  Not that all markdown classes above are ignorant about footnotes.  All footnote functionality is provided separately and then added to the markdown instance at the run time.
 

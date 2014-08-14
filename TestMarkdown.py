@@ -4,7 +4,7 @@ import webbrowser
 import os
 
 # Set the test to one of the options here and run.
-test = "admonition"
+test = "bargello"
 
 if test == "tables":
     text = """
@@ -79,7 +79,8 @@ elif test == "attr_list":
 The body. This is paragraph one.
 {: #para1 .intro}
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. 
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.  
+{: style="font-style:italic;"}
 
 [My link](#myid)
 
@@ -88,6 +89,61 @@ Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor 
     md = markdown.Markdown(['attr_list'])
     outtext = md.convert(text)
 
+elif test == "quick_table":
+
+    text = """# Heading 
+   
+-Opener's double        Shortness in suit doubled
+-Opener's new suits     natural or a control
+-3NT                    Balanced Maximum (Ace or King in their suit)
+-Opener's Pass          Nothing special--flat hand, could be 5x3x2 awful after which, responder's X=penalty
+-Opener's jump to 4M    dead minimum, but 6x3x2
+
+"""
+
+    md = markdown.Markdown(['quick_table'])
+    outtext = md.convert(text)
+
+elif test == "mkdcomments":
+
+    text = """# Heading 
+   
+<!--- these should go --->
+
+"""
+
+    md = markdown.Markdown(['mkdcomments'])
+    outtext = md.convert(text)
+
+elif test == "div_outlines":
+
+    text = """/========== frontmatter.nonsense ===========/
+   
+//========== coverpage ===========//
+
+# Heading 
+
+Some more text
+
+//========== indexpage ===========//
+
+# Heading
+
+more text
+
+"""
+
+    md = markdown.Markdown(['attr_list','div_outlines'])
+    outtext = md.convert(text)
+
+elif test == "bargello":
+    g = open('c:\\git\\dm\\ClikWriter\\gfanshawe\\gfanshawe_complete.md','r',encoding='utf-8') #
+    text = g.read()
+    g.close()
+    md = markdown.Markdown(['meta','attr_list','div_outlines',"includes",'toc']) 
+    md.Meta = {'base_url':'c:\\git\\dm\\ClikWriter\\gfanshawe\\'}
+    outtext = md.convert(text)
+    
 dir = tempfile.gettempdir()
 
 filename = "needRandomFile.html"

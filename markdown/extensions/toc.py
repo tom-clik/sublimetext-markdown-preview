@@ -166,28 +166,36 @@ class TocTreeprocessor(Treeprocessor):
                         p[i] = div
                         break
                 marker_found = True
-                            
+
             if header_rgx.match(c.tag):
                 
-                # Do not override pre-existing ids 
-                if not "id" in c.attrib:
-                    elem_id = stashedHTML2text(text, self.markdown)
-                    elem_id = unique(self.config["slugify"](elem_id, '-'), used_ids)
-                    c.attrib["id"] = elem_id
+                # check we don't have notoc class
+                if 'class' in c.attrib:
+                    print(c.attrib['class'].lower(), c.attrib['class'].lower().find('notoc'))
+                if not ('class' in c.attrib and c.attrib['class'].lower().find('notoc') >= 0):
+
+                    # Do not override pre-existing ids 
+                    if not "id" in c.attrib:
+                        elem_id = stashedHTML2text(text, self.markdown)
+                        elem_id = unique(self.config["slugify"](elem_id, '-'), used_ids)
+                        c.attrib["id"] = elem_id
+                    else:
+                        elem_id = c.attrib["id"]
+
+                    tag_level = int(c.tag[-1])
+                    
+                    if tag_level <= self.config["toc_level"]:
+                        toc_list.append({'level': tag_level,
+                            'id': elem_id,
+                            'name': text})
+
+                    if self.use_anchors:
+                        self.add_anchor(c, elem_id)
+                    if self.use_permalinks:
+                        self.add_permalink(c, elem_id)
                 else:
-                    elem_id = c.attrib["id"]
+                    c.attrib['class'].replace("notoc","")
 
-                tag_level = int(c.tag[-1])
-                
-                toc_list.append({'level': tag_level,
-                    'id': elem_id,
-                    'name': text})
-
-                if self.use_anchors:
-                    self.add_anchor(c, elem_id)
-                if self.use_permalinks:
-                    self.add_permalink(c, elem_id)
-                
         toc_list_nested = order_toc_list(toc_list)
         self.build_toc_etree(div, toc_list_nested)
         prettify = self.markdown.treeprocessors.get('prettify')
@@ -219,7 +227,8 @@ class TocExtension(Extension):
                             "Defaults to 0"],
                         "permalink" : [0,
                             "1 or link text if a Sphinx-style permalink should be added",
-                            "Defaults to 0"]
+                            "Defaults to 0"],
+                        "toc_level" : [1,'level of headers to include','default is 3']
                        }
 
         for key, value in configs:

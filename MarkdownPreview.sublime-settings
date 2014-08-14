@@ -68,7 +68,7 @@
          github     | extension's values are not used.
 
     */
-    "enabled_extensions": ["default"],
+    "enabled_extensions": ["default","attr_list","magiclink","admonition","footnotes","bridge","quick_table","mkdcomments"],
 
     /*
         Enabled parsers for the parser "select parser" command

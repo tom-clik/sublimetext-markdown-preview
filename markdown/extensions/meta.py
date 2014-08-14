@@ -85,7 +85,13 @@ class MetaPreprocessor(Preprocessor):
                 else:
                     lines.insert(0, line)
                     break # no meta data - done
-        self.markdown.Meta = meta
+        
+        # can't seem to test for key normally ??
+        try:
+            self.markdown.Meta.update(meta)
+        except:
+            self.markdown.Meta = meta
+
         return lines
         
 
